@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const customTitle = document.getElementById('customTitle');
   const customOriginal = document.getElementById('customOriginal');
 
-  // Authentication elements
+  // New authentication elements
   const loginForm = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
   const emailLoginBtn = document.getElementById('emailLoginBtn');
@@ -71,24 +71,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const registerEmail = document.getElementById('registerEmail');
   const registerPassword = document.getElementById('registerPassword');
   const confirmPassword = document.getElementById('confirmPassword');
-  const forgotPassword = document.getElementById('forgotPassword');
-  const resendVerification = document.getElementById('resendVerification');
-  const passwordResetForm = document.getElementById('passwordResetForm');
-  const resetEmail = document.getElementById('resetEmail');
-  const sendResetBtn = document.getElementById('sendResetBtn');
-  const cancelReset = document.getElementById('cancelReset');
-  const verificationSent = document.getElementById('verificationSent');
-  const closeVerification = document.getElementById('closeVerification');
-  const rememberMe = document.getElementById('rememberMe');
-  const toast = document.getElementById('toast');
-  const loadingOverlay = document.getElementById('loadingOverlay');
-  const securitySettingsBtn = document.getElementById('securitySettingsBtn');
-  const securityModal = document.getElementById('securityModal');
-  const enable2faBtn = document.getElementById('enable2faBtn');
-  const loginActivityList = document.getElementById('loginActivityList');
-  const closeSecurityModal = document.getElementById('closeSecurityModal');
-  const strengthBar = document.querySelector('.strength-bar');
-  const strengthText = document.querySelector('.strength-text');
 
   // Timer variables
   let timerInterval;
@@ -111,59 +93,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // Password strength meter
-  registerPassword.addEventListener('input', updatePasswordStrength);
-
-  function updatePasswordStrength() {
-    const password = registerPassword.value;
-    let strength = 0;
-    
-    // Length check
-    if (password.length >= 8) strength += 1;
-    if (password.length >= 12) strength += 1;
-    
-    // Complexity checks
-    if (/[A-Z]/.test(password)) strength += 1;
-    if (/[0-9]/.test(password)) strength += 1;
-    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
-    
-    // Update UI
-    const width = (strength / 5) * 100;
-    strengthBar.style.width = `${width}%`;
-    
-    // Color and text
-    if (strength <= 2) {
-      strengthBar.style.backgroundColor = '#e74c3c';
-      strengthText.textContent = 'Password Strength: Weak';
-    } else if (strength <= 4) {
-      strengthBar.style.backgroundColor = '#f39c12';
-      strengthText.textContent = 'Password Strength: Moderate';
-    } else {
-      strengthBar.style.backgroundColor = '#2ecc71';
-      strengthText.textContent = 'Password Strength: Strong';
-    }
-  }
-
-  // Toast notifications
-  function showToast(message, isSuccess = true) {
-    toast.textContent = message;
-    toast.style.backgroundColor = isSuccess ? '#2ecc71' : '#e74c3c';
-    toast.classList.add('show');
-    
-    setTimeout(() => {
-      toast.classList.remove('show');
-    }, 3000);
-  }
-
-  // Loading indicator
-  function showLoading(show) {
-    if (show) {
-      loadingOverlay.classList.remove('hidden');
-    } else {
-      loadingOverlay.classList.add('hidden');
-    }
-  }
-
   // Toggle between login and register forms
   showRegister.addEventListener('click', (e) => {
     e.preventDefault();
@@ -181,47 +110,19 @@ document.addEventListener('DOMContentLoaded', function() {
   emailLoginBtn.addEventListener('click', () => {
     const email = loginEmail.value.trim();
     const password = loginPassword.value.trim();
-    const persistence = rememberMe.checked ? 
-      firebase.auth.Auth.Persistence.LOCAL : 
-      firebase.auth.Auth.Persistence.SESSION;
     
     if (!email || !password) {
-      showToast('Please enter both email and password', false);
+      alert('Please enter both email and password');
       return;
     }
     
-    showLoading(true);
-    
-    auth.setPersistence(persistence)
+    auth.signInWithEmailAndPassword(email, password)
       .then(() => {
-        return auth.signInWithEmailAndPassword(email, password);
-      })
-      .then(() => {
-        showToast('Login successful!');
+        // Success - auth state listener will handle the UI update
       })
       .catch(error => {
         console.error('Login error:', error);
-        showToast(`Login failed: ${error.message}`, false);
-      })
-      .finally(() => {
-        showLoading(false);
-      });
-  });
-
-  // Google login handler
-  googleLoginBtn.addEventListener('click', () => {
-    showLoading(true);
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider)
-      .then(() => {
-        showToast('Google login successful!');
-      })
-      .catch(error => {
-        console.error('Google login error:', error);
-        showToast('Google login failed. Please try again.', false);
-      })
-      .finally(() => {
-        showLoading(false);
+        alert('Login failed: ' + error.message);
       });
   });
 
@@ -233,34 +134,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const confirm = confirmPassword.value.trim();
     
     if (!name || !email || !password || !confirm) {
-      showToast('Please fill in all fields', false);
+      alert('Please fill in all fields');
       return;
     }
     
     if (password !== confirm) {
-      showToast('Passwords do not match', false);
+      alert('Passwords do not match');
       return;
     }
     
     if (password.length < 6) {
-      showToast('Password should be at least 6 characters', false);
+      alert('Password should be at least 6 characters');
       return;
     }
     
-    showLoading(true);
-    
     auth.createUserWithEmailAndPassword(email, password)
       .then((userCredential) => {
+        // Update user profile with display name
         return userCredential.user.updateProfile({
           displayName: name
         });
       })
       .then(() => {
-        // Send verification email
-        return auth.currentUser.sendEmailVerification();
-      })
-      .then(() => {
-        showToast('Registration successful! Verification email sent.');
+        alert('Registration successful! You are now logged in.');
         // Clear form
         registerName.value = '';
         registerEmail.value = '';
@@ -269,172 +165,36 @@ document.addEventListener('DOMContentLoaded', function() {
         // Switch to login form
         registerForm.classList.add('hidden');
         loginForm.classList.remove('hidden');
-        verificationSent.classList.remove('hidden');
       })
       .catch(error => {
         console.error('Registration error:', error);
-        showToast(`Registration failed: ${error.message}`, false);
-      })
-      .finally(() => {
-        showLoading(false);
+        alert('Registration failed: ' + error.message);
       });
   });
 
-  // Password reset functionality
-  forgotPassword.addEventListener('click', (e) => {
-    e.preventDefault();
-    loginForm.classList.add('hidden');
-    passwordResetForm.classList.remove('hidden');
-  });
-
-  cancelReset.addEventListener('click', (e) => {
-    e.preventDefault();
-    passwordResetForm.classList.add('hidden');
-    loginForm.classList.remove('hidden');
-  });
-
-  sendResetBtn.addEventListener('click', () => {
-    const email = resetEmail.value.trim();
-    
-    if (!email) {
-      showToast('Please enter your email address', false);
-      return;
-    }
-    
-    showLoading(true);
-    
-    auth.sendPasswordResetEmail(email)
-      .then(() => {
-        showToast('Password reset email sent! Check your inbox.');
-        passwordResetForm.classList.add('hidden');
-        loginForm.classList.remove('hidden');
-        resetEmail.value = '';
-      })
+  // Google login handler
+  googleLoginBtn.addEventListener('click', () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider)
       .catch(error => {
-        console.error('Reset error:', error);
-        showToast(`Error sending reset email: ${error.message}`, false);
-      })
-      .finally(() => {
-        showLoading(false);
+        console.error('Google login error:', error);
+        alert('Google login failed. Please try again.');
       });
-  });
-
-  // Email verification
-  resendVerification.addEventListener('click', (e) => {
-    e.preventDefault();
-    const user = auth.currentUser;
-    
-    if (user && !user.emailVerified) {
-      showLoading(true);
-      user.sendEmailVerification()
-        .then(() => {
-          showToast('Verification email resent!');
-          verificationSent.classList.remove('hidden');
-        })
-        .catch(error => {
-          console.error('Verification error:', error);
-          showToast(`Error sending verification: ${error.message}`, false);
-        })
-        .finally(() => {
-          showLoading(false);
-        });
-    } else if (!user) {
-      showToast('Please login first', false);
-    } else {
-      showToast('Your email is already verified!');
-    }
-  });
-
-  closeVerification.addEventListener('click', () => {
-    verificationSent.classList.add('hidden');
-  });
-
-  // Two-Factor Authentication Setup
-  enable2faBtn.addEventListener('click', () => {
-    showLoading(true);
-    
-    // In a real implementation, you would integrate with Firebase's 2FA
-    // This is a mock implementation
-    setTimeout(() => {
-      showLoading(false);
-      showToast('Two-factor authentication setup initiated. Check your email for next steps.');
-    }, 1500);
-  });
-
-  // Login Activity Monitoring
-  function loadLoginActivity(userId) {
-    database.ref(`loginActivity/${userId}`).limitToLast(5).once('value')
-      .then(snapshot => {
-        loginActivityList.innerHTML = '';
-        const activities = snapshot.val() || {};
-        
-        Object.entries(activities).forEach(([timestamp, activity]) => {
-          const item = document.createElement('div');
-          item.className = 'login-activity-item';
-          item.innerHTML = `
-            <strong>${new Date(parseInt(timestamp)).toLocaleString()}</strong>
-            <div>From ${activity.ip} (${activity.device})</div>
-            <div>${activity.location || 'Unknown location'}</div>
-          `;
-          loginActivityList.appendChild(item);
-        });
-      })
-      .catch(error => {
-        console.error('Error loading login activity:', error);
-        showToast('Error loading login activity', false);
-      });
-  }
-
-  // Record login activity
-  function recordLoginActivity(user) {
-    const activity = {
-      timestamp: Date.now(),
-      ip: '192.168.1.1', // In production, get from request
-      device: navigator.userAgent.substring(0, 50),
-      location: 'Unknown' // In production, use geolocation service
-    };
-    
-    database.ref(`loginActivity/${user.uid}`).push(activity)
-      .catch(error => {
-        console.error('Error recording login activity:', error);
-      });
-  }
-
-  // Security Modal
-  securitySettingsBtn.addEventListener('click', () => {
-    const user = auth.currentUser;
-    if (user) {
-      loadLoginActivity(user.uid);
-      securityModal.classList.remove('hidden');
-    }
-  });
-
-  closeSecurityModal.addEventListener('click', () => {
-    securityModal.classList.add('hidden');
   });
 
   // Auth state listener
   auth.onAuthStateChanged(user => {
     if (user) {
-      // Check if email is verified (only for email/password users)
-      if (!user.emailVerified && user.providerData[0].providerId === 'password') {
-        showToast('Please verify your email address. Check your inbox.', false);
-      }
-      
-      // Record login activity
-      recordLoginActivity(user);
-      
-      // Update UI
+      // User is signed in
       loginBtn.classList.add('hidden');
       userInfo.classList.remove('hidden');
-      
-      // Set user photo
+      // Check if user has a photo URL (Google users will, email users won't)
       if (user.photoURL) {
         userPhoto.src = user.photoURL;
       } else {
+        // Use a default avatar for email users
         userPhoto.src = 'https://www.gravatar.com/avatar/' + user.uid + '?d=identicon';
       }
-      
       userName.textContent = user.displayName || 'User';
       loginPrompt.classList.add('hidden');
       customTestSection.classList.remove('hidden');
@@ -451,25 +211,225 @@ document.addEventListener('DOMContentLoaded', function() {
       customTestSection.classList.add('hidden');
       globalTestsSection.classList.add('hidden');
       leaderboardSection.classList.add('hidden');
+      // Show login form by default
       loginForm.classList.remove('hidden');
       registerForm.classList.add('hidden');
-      passwordResetForm.classList.add('hidden');
     }
   });
 
   // Logout handler
   logoutBtn.addEventListener('click', () => {
-    auth.signOut()
-      .then(() => {
-        showToast('Logged out successfully');
-      })
-      .catch(error => {
-        console.error('Logout error:', error);
-        showToast('Logout failed. Please try again.', false);
-      });
+    auth.signOut();
   });
 
-  // [Rest of your existing application code...]
+
+  // Leaderboard filter change handler
+  leaderboardFilter.addEventListener('change', () => {
+    currentPage = 1;
+    loadLeaderboard();
+  });
+
+  // Test name filter change handler
+  testNameFilter.addEventListener('change', () => {
+    currentPage = 1;
+    loadLeaderboard();
+  });
+
+  // Pagination button handlers
+  prevPageBtn.addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      updatePagination();
+    }
+  });
+
+  nextPageBtn.addEventListener('click', () => {
+    const totalPages = Math.ceil(filteredAttempts.length / entriesPerPage);
+    if (currentPage < totalPages) {
+      currentPage++;
+      updatePagination();
+    }
+  });
+
+  // Load leaderboard data with pagination
+  function loadLeaderboard() {
+    const filter = leaderboardFilter.value;
+    let query = database.ref('attempts').orderByChild('timestamp');
+    
+    if (filter === 'week') {
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      query = query.startAt(oneWeekAgo.getTime());
+    } else if (filter === 'month') {
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      query = query.startAt(oneMonthAgo.getTime());
+    }
+
+    query.once('value')
+      .then(snapshot => {
+        const attempts = snapshot.val();
+        if (!attempts) {
+          leaderboardList.innerHTML = '<p>No attempts recorded yet. Be the first to complete a test!</p>';
+          leaderboardPagination.innerHTML = '';
+          return;
+        }
+
+        // Convert to array and sort by accuracy (descending)
+        allAttempts = Object.entries(attempts).map(([id, attempt]) => ({
+          id,
+          ...attempt
+        }));
+        
+        allAttempts.sort((a, b) => b.stats.accuracy - a.stats.accuracy);
+        
+        // Update test name filter options
+        updateTestNameFilter(allAttempts);
+        
+        // Filter by test name if selected
+        filteredAttempts = testNameFilter.value === 'all' 
+          ? allAttempts 
+          : allAttempts.filter(attempt => attempt.testTitle === testNameFilter.value);
+          
+        // Update pagination
+        updatePagination();
+      })
+      .catch(error => {
+        console.error('Error loading leaderboard:', error);
+        leaderboardList.innerHTML = '<p>Error loading leaderboard. Please try again later.</p>';
+        leaderboardPagination.innerHTML = '';
+      });
+  }
+
+  function updateTestNameFilter(attempts) {
+    uniqueTestNames = new Set(attempts.map(attempt => attempt.testTitle || 'Custom Test'));
+    const currentTestFilter = testNameFilter.value;
+    
+    testNameFilter.innerHTML = '<option value="all">All Tests</option>';
+    uniqueTestNames.forEach(testName => {
+      const option = document.createElement('option');
+      option.value = testName;
+      option.textContent = testName;
+      testNameFilter.appendChild(option);
+    });
+    
+    // Restore previous selection if it still exists
+    if (currentTestFilter !== 'all' && uniqueTestNames.has(currentTestFilter)) {
+      testNameFilter.value = currentTestFilter;
+    } else {
+      testNameFilter.value = 'all';
+    }
+  }
+
+  function updatePagination() {
+    const totalPages = Math.ceil(filteredAttempts.length / entriesPerPage);
+    const startIdx = (currentPage - 1) * entriesPerPage;
+    const endIdx = startIdx + entriesPerPage;
+    const pageAttempts = filteredAttempts.slice(startIdx, endIdx);
+    
+    // Update buttons
+    prevPageBtn.disabled = currentPage === 1;
+    nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
+    
+    // Update pagination info
+    leaderboardPagination.innerHTML = `Showing ${startIdx + 1}-${Math.min(endIdx, filteredAttempts.length)} of ${filteredAttempts.length} entries`;
+    
+    // Build leaderboard table
+    renderLeaderboardTable(pageAttempts, startIdx + 1);
+  }
+
+  function renderLeaderboardTable(attempts, startRank) {
+    if (attempts.length === 0) {
+      leaderboardList.innerHTML = '<p>No attempts match your filters.</p>';
+      return;
+    }
+
+    let tableHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>User</th>
+            <th>Test</th>
+            <th>Accuracy</th>
+            <th>Speed (WPM)</th>
+            <th>Words</th>
+            <th>Half Mistakes</th>
+            <th>Full Mistakes</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    attempts.forEach((attempt, index) => {
+      const date = new Date(attempt.timestamp);
+      const accuracyClass = 
+        attempt.stats.accuracy >= 90 ? 'accuracy-high' :
+        attempt.stats.accuracy >= 70 ? 'accuracy-medium' : 'accuracy-low';
+
+      tableHTML += `
+        <tr>
+          <td>${startRank + index}</td>
+          <td class="leaderboard-user">
+            <img src="${attempt.userPhoto}" alt="${attempt.userName}">
+            <span>${attempt.userName}</span>
+          </td>
+          <td>${attempt.testTitle || 'Custom Test'}</td>
+          <td class="accuracy-cell ${accuracyClass}">${attempt.stats.accuracy.toFixed(1)}%</td>
+          <td>${attempt.stats.wpm}</td>
+          <td>${attempt.stats.totalUser}</td>
+          <td>${attempt.stats.halfMistakes}</td>
+          <td>${attempt.stats.fullMistakes}</td>
+          <td>${date.toLocaleDateString()}</td>
+        </tr>
+      `;
+    });
+
+    tableHTML += `</tbody></table>`;
+    leaderboardList.innerHTML = tableHTML;
+  }
+
+  // Auto-delete old data function
+  function cleanupOldData() {
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    const timestampThreshold = threeMonthsAgo.getTime();
+
+    // Cleanup old attempts
+    database.ref('attempts').once('value').then(snapshot => {
+      const updates = {};
+      snapshot.forEach(child => {
+        if (child.val().timestamp < timestampThreshold) {
+          updates[child.key] = null;
+        }
+      });
+      if (Object.keys(updates).length > 0) {
+        database.ref('attempts').update(updates)
+          .then(() => console.log('Old attempts cleaned up'))
+          .catch(error => console.error('Error cleaning up attempts:', error));
+      }
+    });
+
+    // Cleanup old tests
+    database.ref('tests').once('value').then(snapshot => {
+      const updates = {};
+      snapshot.forEach(child => {
+        if (child.val().timestamp < timestampThreshold) {
+          updates[child.key] = null;
+        }
+      });
+      if (Object.keys(updates).length > 0) {
+        database.ref('tests').update(updates)
+          .then(() => console.log('Old tests cleaned up'))
+          .catch(error => console.error('Error cleaning up tests:', error));
+      }
+    });
+  }
+
+  // Run cleanup weekly
+  setInterval(cleanupOldData, 7 * 24 * 60 * 60 * 1000);
+
   // Original text paste handler
   originalTextEl.addEventListener('paste', function() {
     // Clear any selected test card
@@ -520,7 +480,7 @@ document.addEventListener('DOMContentLoaded', function() {
   closeResultsBtn.addEventListener('click', function() {
     location.reload();
   });
-
+  
   function startTimer(minutes) {
     endTime = new Date();
     endTime.setMinutes(endTime.getMinutes() + minutes);
@@ -579,7 +539,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const userText = userTextEl.value;
     
     if (!originalText || !userText) {
-      showToast('Please enter both original text and your transcription.', false);
+      alert('Please enter both original text and your transcription.');
       return;
     }
     
@@ -620,18 +580,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (user) {
       const attemptData = {
         userName: user.displayName,
-        userPhoto: user.photoURL || 'https://www.gravatar.com/avatar/' + user.uid + '?d=identicon',
-        testTitle: testTitle,
+        userPhoto: user.photoURL,
+        testTitle: testTitle,  // Use the determined test title
         stats: comparison.stats,
         timestamp: Date.now()
       };
 
       database.ref('attempts').push(attemptData)
         .then(() => loadLeaderboard())
-        .catch(error => {
-          console.error('Error saving attempt:', error);
-          showToast('Error saving attempt to leaderboard', false);
-        });
+        .catch(error => console.error('Error saving attempt:', error));
     }
   }
   
@@ -672,10 +629,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       pdf.save('transcription-comparison.pdf');
-      showToast('PDF downloaded successfully!');
-    }).catch(error => {
-      console.error('Error generating PDF:', error);
-      showToast('Error generating PDF', false);
     });
   }
   
@@ -1140,196 +1093,15 @@ document.addEventListener('DOMContentLoaded', function() {
       })
       .catch(error => {
         console.error('Error loading tests:', error);
-        showToast('Error loading community tests', false);
         globalTestsList.innerHTML = '<p>Error loading community tests. Please try again later.</p>';
       });
   }
-
-  // Load leaderboard data with pagination
-  function loadLeaderboard() {
-    const filter = leaderboardFilter.value;
-    let query = database.ref('attempts').orderByChild('timestamp');
-    
-    if (filter === 'week') {
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      query = query.startAt(oneWeekAgo.getTime());
-    } else if (filter === 'month') {
-      const oneMonthAgo = new Date();
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-      query = query.startAt(oneMonthAgo.getTime());
-    }
-
-    query.once('value')
-      .then(snapshot => {
-        const attempts = snapshot.val();
-        if (!attempts) {
-          leaderboardList.innerHTML = '<p>No attempts recorded yet. Be the first to complete a test!</p>';
-          leaderboardPagination.innerHTML = '';
-          return;
-        }
-
-        // Convert to array and sort by accuracy (descending)
-        allAttempts = Object.entries(attempts).map(([id, attempt]) => ({
-          id,
-          ...attempt
-        }));
-        
-        allAttempts.sort((a, b) => b.stats.accuracy - a.stats.accuracy);
-        
-        // Update test name filter options
-        updateTestNameFilter(allAttempts);
-        
-        // Filter by test name if selected
-        filteredAttempts = testNameFilter.value === 'all' 
-          ? allAttempts 
-          : allAttempts.filter(attempt => attempt.testTitle === testNameFilter.value);
-          
-        // Update pagination
-        updatePagination();
-      })
-      .catch(error => {
-        console.error('Error loading leaderboard:', error);
-        showToast('Error loading leaderboard', false);
-        leaderboardList.innerHTML = '<p>Error loading leaderboard. Please try again later.</p>';
-        leaderboardPagination.innerHTML = '';
-      });
-  }
-
-  function updateTestNameFilter(attempts) {
-    uniqueTestNames = new Set(attempts.map(attempt => attempt.testTitle || 'Custom Test'));
-    const currentTestFilter = testNameFilter.value;
-    
-    testNameFilter.innerHTML = '<option value="all">All Tests</option>';
-    uniqueTestNames.forEach(testName => {
-      const option = document.createElement('option');
-      option.value = testName;
-      option.textContent = testName;
-      testNameFilter.appendChild(option);
-    });
-    
-    // Restore previous selection if it still exists
-    if (currentTestFilter !== 'all' && uniqueTestNames.has(currentTestFilter)) {
-      testNameFilter.value = currentTestFilter;
-    } else {
-      testNameFilter.value = 'all';
-    }
-  }
-
-  function updatePagination() {
-    const totalPages = Math.ceil(filteredAttempts.length / entriesPerPage);
-    const startIdx = (currentPage - 1) * entriesPerPage;
-    const endIdx = startIdx + entriesPerPage;
-    const pageAttempts = filteredAttempts.slice(startIdx, endIdx);
-    
-    // Update buttons
-    prevPageBtn.disabled = currentPage === 1;
-    nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
-    
-    // Update pagination info
-    leaderboardPagination.innerHTML = `Showing ${startIdx + 1}-${Math.min(endIdx, filteredAttempts.length)} of ${filteredAttempts.length} entries`;
-    
-    // Build leaderboard table
-    renderLeaderboardTable(pageAttempts, startIdx + 1);
-  }
-
-  function renderLeaderboardTable(attempts, startRank) {
-    if (attempts.length === 0) {
-      leaderboardList.innerHTML = '<p>No attempts match your filters.</p>';
-      return;
-    }
-
-    let tableHTML = `
-      <table>
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>User</th>
-            <th>Test</th>
-            <th>Accuracy</th>
-            <th>Speed (WPM)</th>
-            <th>Words</th>
-            <th>Half Mistakes</th>
-            <th>Full Mistakes</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
-
-    attempts.forEach((attempt, index) => {
-      const date = new Date(attempt.timestamp);
-      const accuracyClass = 
-        attempt.stats.accuracy >= 90 ? 'accuracy-high' :
-        attempt.stats.accuracy >= 70 ? 'accuracy-medium' : 'accuracy-low';
-
-      tableHTML += `
-        <tr>
-          <td>${startRank + index}</td>
-          <td class="leaderboard-user">
-            <img src="${attempt.userPhoto}" alt="${attempt.userName}">
-            <span>${attempt.userName}</span>
-          </td>
-          <td>${attempt.testTitle || 'Custom Test'}</td>
-          <td class="accuracy-cell ${accuracyClass}">${attempt.stats.accuracy.toFixed(1)}%</td>
-          <td>${attempt.stats.wpm}</td>
-          <td>${attempt.stats.totalUser}</td>
-          <td>${attempt.stats.halfMistakes}</td>
-          <td>${attempt.stats.fullMistakes}</td>
-          <td>${date.toLocaleDateString()}</td>
-        </tr>
-      `;
-    });
-
-    tableHTML += `</tbody></table>`;
-    leaderboardList.innerHTML = tableHTML;
-  }
-
-  // Auto-delete old data function
-  function cleanupOldData() {
-    const threeMonthsAgo = new Date();
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-    const timestampThreshold = threeMonthsAgo.getTime();
-
-    // Cleanup old attempts
-    database.ref('attempts').once('value').then(snapshot => {
-      const updates = {};
-      snapshot.forEach(child => {
-        if (child.val().timestamp < timestampThreshold) {
-          updates[child.key] = null;
-        }
-      });
-      if (Object.keys(updates).length > 0) {
-        database.ref('attempts').update(updates)
-          .then(() => console.log('Old attempts cleaned up'))
-          .catch(error => console.error('Error cleaning up attempts:', error));
-      }
-    });
-
-    // Cleanup old tests
-    database.ref('tests').once('value').then(snapshot => {
-      const updates = {};
-      snapshot.forEach(child => {
-        if (child.val().timestamp < timestampThreshold) {
-          updates[child.key] = null;
-        }
-      });
-      if (Object.keys(updates).length > 0) {
-        database.ref('tests').update(updates)
-          .then(() => console.log('Old tests cleaned up'))
-          .catch(error => console.error('Error cleaning up tests:', error));
-      }
-    });
-  }
-
-  // Run cleanup weekly
-  setInterval(cleanupOldData, 7 * 24 * 60 * 60 * 1000);
 
   // Save test to Firebase
   saveBtn.addEventListener('click', () => {
     const user = auth.currentUser;
     if (!user) {
-      showToast('Please login to save tests.', false);
+      alert('Please login to save tests.');
       return;
     }
 
@@ -1337,33 +1109,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const text = customOriginal.value.trim();
     
     if (!title || !text) {
-      showToast('Please enter both a title and the original text.', false);
+      alert('Please enter both a title and the original text.');
       return;
     }
-
-    showLoading(true);
 
     const testData = {
       title,
       text,
       userName: user.displayName,
-      userPhoto: user.photoURL || 'https://www.gravatar.com/avatar/' + user.uid + '?d=identicon',
+      userPhoto: user.photoURL,
       timestamp: firebase.database.ServerValue.TIMESTAMP
     };
 
     database.ref('tests').push(testData)
       .then(() => {
-        showToast('Test saved and shared with the community!');
+        alert('Test saved and shared with the community!');
         customTitle.value = '';
         customOriginal.value = '';
         loadGlobalTests();
       })
       .catch(error => {
         console.error('Error saving test:', error);
-        showToast('Failed to save test. Please try again.', false);
-      })
-      .finally(() => {
-        showLoading(false);
+        alert('Failed to save test. Please try again.');
       });
   });
 
@@ -1376,7 +1143,7 @@ document.addEventListener('DOMContentLoaded', function() {
       .then(snapshot => {
         const userTests = snapshot.val();
         if (!userTests || Object.keys(userTests).length === 0) {
-          showToast('You have no tests to delete.', false);
+          alert('You have no tests to delete.');
           return;
         }
 
@@ -1424,7 +1191,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .map(item => item.id);
           
           if (selectedTests.length === 0) {
-            showToast('Please select at least one test to delete.', false);
+            alert('Please select at least one test to delete.');
             return;
           }
           
@@ -1433,26 +1200,21 @@ document.addEventListener('DOMContentLoaded', function() {
             updates[id] = null;
           });
           
-          showLoading(true);
-          
           database.ref('tests').update(updates)
             .then(() => {
-              showToast(`${selectedTests.length} test(s) deleted successfully.`);
+              alert(`${selectedTests.length} test(s) deleted successfully.`);
               document.body.removeChild(modal);
               loadGlobalTests();
             })
             .catch(error => {
               console.error('Error deleting tests:', error);
-              showToast('Failed to delete tests. Please try again.', false);
-            })
-            .finally(() => {
-              showLoading(false);
+              alert('Failed to delete tests. Please try again.');
             });
         });
       })
       .catch(error => {
         console.error('Error fetching user tests:', error);
-        showToast('Failed to fetch your tests. Please try again.', false);
+        alert('Failed to fetch your tests. Please try again.');
       });
   });
 });
