@@ -89,8 +89,8 @@
     <div class="select-panel">
        <select id="volume-select">
          <option value="1">Volume 1</option>
-        <option value="2">Volume 2</option>
-        <option value="3">Volume 3</option>
+         <option value="2">Volume 2</option>
+         <option value="3">Volume 3</option>
 
       <select id="test-select">
       </select>
@@ -134,13 +134,8 @@
         </select>
         <select id="leaderboard-speed-select">
           <option value="all">All Speeds</option>
-           <option value="70">70 WPM</option>
-        <option value="75">75 WPM</option>
-        <option value="80">80 WPM</option>
-        <option value="85">85 WPM</option>
-        <option value="90">90 WPM</option>
-        <option value="95">95 WPM</option>
-        <option value="100">100 WPM</option>
+          <option value="80">80 WPM</option>
+          <option value="100">100 WPM</option>
         </select>
         <button id="refresh-leaderboard" class="download-btn">Refresh</button>
       </div>
@@ -192,7 +187,6 @@ const firebaseConfig = {
   appId: "1:923880455930:web:4cc708da4c0641b79b5343",
   measurementId: "G-WK8RPR2QMD"
 };
-
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -648,8 +642,9 @@ const firebaseConfig = {
     const videoContainer = document.getElementById('video-container');
 
     const tests = {
-        1: Array.from({ length: 50 }, (_, i) => `${i + 1}`),
-        2: Array.from({ length: 50 }, (_, i) => `${i + 51}`)
+        1: Array.from({ length: 22 }, (_, i) => `${i + 1}`),
+        2: Array.from({ length: 22 }, (_, i) => `${i + 23}`),
+        3: Array.from({ length: 22 }, (_, i) => `${i + 45}`)
     };
 
     function populateTests(volume) {
@@ -657,7 +652,7 @@ const firebaseConfig = {
         tests[volume].forEach(test => {
             const option = document.createElement('option');
             option.value = test;
-            option.text = "Test " + test;
+            option.text = "Transcription " + test;
             testSelect.appendChild(option);
         });
     }
