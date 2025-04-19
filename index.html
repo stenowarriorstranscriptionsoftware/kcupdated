@@ -130,7 +130,7 @@
       <h2>Leaderboard</h2>
       <div class="leaderboard-filters">
         <select id="leaderboard-test-select">
-          <option value="all">All Tests</option>
+          <option value="all">All Transcriptions</option>
         </select>
         <select id="leaderboard-speed-select">
           <option value="all">All Speeds</option>
@@ -150,7 +150,7 @@
             <tr>
               <th>Rank</th>
               <th>Name</th>
-              <th>Test</th>
+              <th>Transcription</th>
               <th>Speed</th>
               <th>Accuracy</th>
               <th>Words</th>
@@ -408,13 +408,13 @@ const firebaseConfig = {
 
     // Leaderboard Functions
     function populateLeaderboardTestSelect() {
-      leaderboardTestSelect.innerHTML = '<option value="all">All Tests</option>';
+      leaderboardTestSelect.innerHTML = '<option value="all">All Transcriptions</option>';
       
       // Add tests 1-22
       for (let i = 1; i <= 22; i++) {
         const option = document.createElement('option');
         option.value = i;
-        option.text = `Test ${i}`;
+        option.text = `Transcription ${i}`;
         leaderboardTestSelect.appendChild(option);
       }
       
@@ -422,7 +422,7 @@ const firebaseConfig = {
       for (let i = 23; i <= 44; i++) {
         const option = document.createElement('option');
         option.value = i;
-        option.text = `Test ${i}`;
+        option.text = `Transcription ${i}`;
         leaderboardTestSelect.appendChild(option);
       }
        
@@ -430,7 +430,7 @@ const firebaseConfig = {
       for (let i = 45; i <= 66; i++) {
         const option = document.createElement('option');
         option.value = i;
-        option.text = `Test ${i}`;
+        option.text = `Transcription ${i}`;
         leaderboardTestSelect.appendChild(option);
       }
     }
