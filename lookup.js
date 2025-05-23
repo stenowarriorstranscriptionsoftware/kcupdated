@@ -6,7 +6,7 @@ const data = [
 "0 90 https://www.youtube.com/embed/CX9B0WPXSfQ",
 "0 95 https://www.youtube.com/embed/CX9B0WPXSfQ",
 "0 100 https://www.youtube.com/embed/CX9B0WPXSfQ",
-"1 70 https://www.youtube.com/embed/Nwn29CIabF4",
+"1 70 https://www.youtube.com/embed/aDjwouBE3ak?si=DQ1ERP7xtRIIxlAV",
 "1 75 https://www.youtube.com/embed/3u-9VD1XmgE",
 "1 80 https://www.youtube.com/embed/8g9-T8Uyqds",
 "1 85 https://www.youtube.com/embed/63-Fz8awwpw",
