@@ -1,5 +1,5 @@
 const data = [
-"0 70 https://www.youtube.com/embed/aDjwouBE3ak?si=DQ1ERP7xtRIIxlAV",
+"0 70 https://www.youtube.com/embed/CX9B0WPXSfQ",
 "0 75 https://www.youtube.com/embed/CX9B0WPXSfQ",
 "0 80 https://www.youtube.com/embed/CX9B0WPXSfQ",
 "0 85 https://www.youtube.com/embed/CX9B0WPXSfQ",
